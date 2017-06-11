@@ -24,20 +24,20 @@ ___
 
 Some facts about discriminant analysis:
 
-- Remember that in logistic regression we have a route to obtain Pr(Y=y|X=x), which is the probability of Y being a particulat class y, given the value of the predictor X = x.
+- Remember that in logistic regression we have a route to obtain Pr(Y=y|X=x), which is the probability of Y being a particular class y, given the value of the predictor X = x.
 
-1. The overal strategy in the discriminant analysis is to model the distribution of X in each class seperately, then use **Bayes theorem** to flip the things around and obtain **Pr(Y=y|X=x)** which is our primary interest.
+1. The overall strategy in the discriminant analysis is to model the distribution of X in each class separately, then use **Bayes theorem** to flip the things around and obtain **Pr(Y=y|X=x)** which is our primary interest.
 
 2. When we assume **normal (Gaussian) distributions** AND **equal variances** for each class, this approach is called **linear discriminant analysis (LDA)**.
 
 3.  When we assume **normal (Gaussian) distributions** BUT **unequal covariance matrices** for each class, this approach is called **quadratic discriminant analysis (QDA)**
 
-4. If we simplify the covariance matrix and make it diagonal, in other words, if we assume the **conditional independence** of the variables for each class, then this analysis is called **Naive Bayes (NB)**. Note that this assumption is almost always wrong, and ve get biased estimates. However, for classification, the only thing we need to know is which class probability is the largest. Therefore, we can tolerate lots of bias, still get a good classification performance.
+4. If we simplify the covariance matrix and make it diagonal, in other words, if we assume the **conditional independence** of the variables for each class, then this analysis is called **Naive Bayes (NB)**. Note that this assumption is almost always wrong, and we get biased estimates. However, for classification, the only thing we need to know is which class probability is the largest. Therefore, we can tolerate lots of bias, still get a good classification performance.
 
 **LDA is useful when:**
 - n is small, 
 - K (number of classes) > 2, 
-- classes are well seperated,
+- classes are well separated,
 - Gaussian Assumptions are reasonable.
 
 **Naive Bayes is useful when p (number of predictors) is very large. (e.g: 4000 - 5000 features)**
@@ -87,7 +87,7 @@ lda.fit
 
 - **Group means:** tabular summary of the means for each variable and for each group. Looks like there are differences between groups.
 
-- **Coefficients of linear discriminants:** these are the coefficients of the linear function LDA uses to seperate the classes. Since there are only K=2 classes, we will have K-1 LDs and therefore only have LD1. LD1 in turn formed by coefficients for both actual variables in the training set, and these coefficients are estimated from the training data.
+- **Coefficients of linear discriminants:** these are the coefficients of the linear function LDA uses to separate the classes. Since there are only K=2 classes, we will have K-1 LDs and therefore only have LD1. LD1 in turn formed by coefficients for both actual variables in the training set, and these coefficients are estimated from the training data.
 
 # Interpreting the plot(LDA)
 
@@ -97,9 +97,9 @@ Certain functions, like plot() directly work on LDA:
 plot(lda.fit)
 ```
 
-This plots the **values of the linear discriminant function** seperately for both predicted classes. 
+This plots the **values of the linear discriminant function** separately for both predicted classes. 
 
-From these plots we can already notice that there is not much difference in the response and these two histograms indeed look on top of each other. This further illustrates that these are two difficult classes to seperate from each other. 
+From these plots we can already notice that there is not much difference in the response and these two histograms indeed look on top of each other. This further illustrates that these are two difficult classes to separate from each other. 
 
 # Performing predictions using LDA model fit
 
@@ -126,7 +126,7 @@ The table consists of:
 - Row name (matches to original data)
 - **class**: the classification returned
 - **posterior probabilities** (printed for each class): note that the class prediction label is the one with higher posterior probability.
-- **LD1**: the actual value of the linear dicriminant function fitted to the data.
+- **LD1**: the actual value of the linear discriminant function fitted to the data.
 
 # Prepare the confusion martix
 
