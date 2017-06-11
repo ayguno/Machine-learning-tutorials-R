@@ -8,7 +8,7 @@ output:
         number_sections: true
         depth: 4
         theme: cerulean
-        highlight: tango
+        highlight: espresso
         df_print: paged
 ---
 

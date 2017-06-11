@@ -1,0 +1,55 @@
+---
+title: "Discriminant Analysis Tutorial"
+author: "Ozan Aygun"
+date: "6/04/2017"
+output: 
+   html_document:
+        toc: true
+        number_sections: true
+        depth: 4
+        theme: cerulean
+        highlight: tango
+        df_print: paged
+---
+
+# Introduction
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,results = "markup", fig.align = "center", fig.width = 5, fig.height = 4,message=FALSE,warning=FALSE)
+```
+
+**Here our goal is to use linear discriminant analysis for making predicitons.** 
+___
+
+Some facts about discriminant analysis:
+
+- Remember that in logistic regression we have a route to obtain Pr(Y=y|X=x), which is the probability of Y being a particulat class y, given the value of the predictor X = x.
+
+1. The overal strategy in the discriminant analysis is to model the distribution of X in each class seperately, then use **Bayes theorem** to flip the things around and obtain **Pr(Y=y|X=x)** which is our primary interest.
+
+2. When we assume **normal (Gaussian) distributions** AND **equal variances** for each class, this approach is called **linear discriminant analysis (LDA)**.
+
+3.  When we assume **normal (Gaussian) distributions** BUT **unequal covariance matrices** for each class, this approach is called **quadratic discriminant analysis (QDA)**
+
+4. If we simplify the covariance matrix and make it diagonal, in other words, if we assume the **conditional independence** of the variables for each class, then this analysis is called **Naive Bayes (NB)**. Note that this assumption is almost always wrong, and ve get biased estimates. However, for classification, the only thing we need to know is which class probability is the largest. Therefore, we can tolerate lots of bias, still get a good classification performance.
+
+**LDA is useful when:**
+- n is small, 
+- K (number of classes) > 2, 
+- classes are well seperated,
+- Gaussian Assumptions are reasonable.
+
+**Naive Bayes is useful when p (number of predictors) is very large. (e.g: 4000 - 5000 features)**
+
+As a general rule of thumb:
+
+- As n gets larger and p (number of predictors or data dimension) gets smaller, the probability of overfitting gets lower and model parameters will be estimated with less volatility. 
+
+When we fit a LDA, we silently produce **Discriminant variables**, these are special linear combinations of the original variables. These variables will have centroids and they essentially classify Y towards the closest centroid.
+
+Note: Bayes rule is quite powerful in classification problems. Particularly when you have a very good representative sample from the population, and X's are approximately normally distributed, then Bayes rule is probably one of the best classifiers you can train.
+
+___
+
+
+
