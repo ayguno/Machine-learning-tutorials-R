@@ -93,7 +93,7 @@ lda.fit
 
 Certain functions, like plot() directly work on LDA:
 
-```{r}
+```{r, fig.height= 7}
 plot(lda.fit)
 ```
 
@@ -108,7 +108,7 @@ In order to perform predictions, we only use the data that belongs to 2005. This
 ```{r}
 Smarket.2005 <- subset(Smarket, Year == 2005)
 lda.predict <- predict(lda.fit,newdata = Smarket.2005)
-lda.predict[1:5,] # Note that the prediction is not in matrix format
+#lda.predict[1:5,] # Note that the prediction is not in matrix format
 class(lda.predict)
 ```
 
@@ -127,4 +127,34 @@ The table consists of:
 - **class**: the classification returned
 - **posterior probabilities** (printed for each class): note that the class prediction label is the one with higher posterior probability.
 - **LD1**: the actual value of the linear dicriminant function fitted to the data.
+
+# Prepare the confusion martix
+
+We will tabulate the true labels with the predicted labels:
+
+```{r}
+# Rows: predicted labels, Columns: True labels
+table(lda.predict$class,Smarket.2005$Direction)
+# Diagonal : correct predictions
+# Off diagonal: mistakes
+```
+
+It looks like we correctly predicted 106 of the UPs and 35 of the Downs in the testing set.
+
+**Our average classification accuracy (i.e: correct classification rate) is:**
+
+```{r}
+# How many times on average the prediction is equal to the true labels?
+mean(lda.predict$class == Smarket.2005$Direction)
+```
+
+**Our average mis-classification rate is:**
+
+```{r}
+mean(lda.predict$class != Smarket.2005$Direction)
+```
+
+# Conclusions
+
+Note that this is a hard classification problem since stock market is often unpredictable. Despite our LDA prediction performed a better job compared to logistic regression we employed for the same problem before. This again demonstrates that every small tune in the model could make a big difference in the prediction accuracy.
 
