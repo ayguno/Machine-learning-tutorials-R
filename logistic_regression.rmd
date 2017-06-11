@@ -32,6 +32,8 @@ ___
 
 In this exercise, we will use the Smarket data set from ISLR package. This data represents daily percentage returns for the S&P 500 stock index between 2001 and 2005.
 
+___
+
 #Basic exploration of the data
 
 ```{r,fig.width = 10, fig.height = 10}
