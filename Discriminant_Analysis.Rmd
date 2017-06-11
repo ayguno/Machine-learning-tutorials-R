@@ -19,6 +19,7 @@ knitr::opts_chunk$set(echo = TRUE,results = "markup", fig.align = "center", fig.
 ```
 
 **Here our goal is to use linear discriminant analysis for making predicitons.** 
+
 ___
 
 Some facts about discriminant analysis:
@@ -51,5 +52,79 @@ Note: Bayes rule is quite powerful in classification problems. Particularly when
 
 ___
 
+#Basic exploration of the data
 
+In this exercise, we will use the Smarket data set from ISLR package. This data represents daily percentage returns for the S&P 500 stock index between 2001 and 2005.
+
+```{r,fig.width = 10, fig.height = 10}
+require(ISLR)
+require(MASS)
+names(Smarket)
+str(Smarket)
+summary(Smarket)
+library(knitr)
+knitr::kable(head(Smarket),align = "c")
+plot(Smarket[,-9], col = ifelse(Smarket$Direction == "Up","green","red"), cex = 0.5, pch = 20)
+```
+
+Along with other useful functions, MASS package contains the function to perform LDA.
+
+# Fitting the LDA model
+
+Direction is the response variable, we are trying to use returns from the last two days to predict stock market direction.
+
+```{r}
+lda.fit <- lda(Direction ~ Lag1 + Lag2, data = Smarket, subset = Year < 2005)
+lda.fit
+
+```
+
+- When training the model we are using a subset of the Smarket data, the data that is acquired before 2005. Later we will use the model to make predictions about the 2005.
+
+# Interpreting the output
+
+- **prior:** Remember the Bayes rule, these are the prior probabilities used in the LDA. Since we haven't specified them, the model uses the proportions of the two classes in the training data by default.
+
+- **Group means:** tabular summary of the means for each variable and for each group. Looks like there are differences between groups.
+
+- **Coefficients of linear discriminants:** these are the coefficients of the linear function LDA uses to seperate the classes. Since there are only K=2 classes, we will have K-1 LDs and therefore only have LD1. LD1 in turn formed by coefficients for both actual variables in the training set, and these coefficients are estimated from the training data.
+
+# Interpreting the plot(LDA)
+
+Certain functions, like plot() directly work on LDA:
+
+```{r}
+plot(lda.fit)
+```
+
+This plots the **values of the linear discriminant function** seperately for both predicted classes. 
+
+From these plots we can already notice that there is not much difference in the response and these two histograms indeed look on top of each other. This further illustrates that these are two difficult classes to seperate from each other. 
+
+# Performing predictions using LDA model fit
+
+In order to perform predictions, we only use the data that belongs to 2005. This is our test data set:
+
+```{r}
+Smarket.2005 <- subset(Smarket, Year == 2005)
+lda.predict <- predict(lda.fit,newdata = Smarket.2005)
+lda.predict[1:5,] # Note that the prediction is not in matrix format
+class(lda.predict)
+```
+
+Note that the predictions we get from lda model fit using the predict function are returned as **list**. The length of each argument is the same, so they can be easily converted to data frame:
+
+```{r}
+lda.predict <- data.frame(lda.predict)
+head(lda.predict)
+```
+
+# Interpreting the prediction table
+
+The table consists of:
+
+- Row name (matches to original data)
+- **class**: the classification returned
+- **posterior probabilities** (printed for each class): note that the class prediction label is the one with higher posterior probability.
+- **LD1**: the actual value of the linear dicriminant function fitted to the data.
 
