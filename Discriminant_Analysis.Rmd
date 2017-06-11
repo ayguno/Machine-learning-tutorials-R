@@ -1,5 +1,5 @@
 ---
-title: "Discriminant Analysis Tutorial"
+title: "Discriminant Analysis and KNN for classification"
 author: "Ozan Aygun"
 date: "6/04/2017"
 output: 
@@ -18,7 +18,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE,results = "markup", fig.align = "center", fig.width = 5, fig.height = 4,message=FALSE,warning=FALSE)
 ```
 
-**Here our goal is to use linear discriminant analysis for making predicitons.** 
+**Here our goal is to use linear and quadratic discriminant analysis for making predicitons. We will also compare LDA and QDA with the non-parametric KNN approach in order to get some intuition about which approaches might work better in a given situation.** 
 
 ___
 
@@ -158,3 +158,169 @@ mean(lda.predict$class != Smarket.2005$Direction)
 
 Note that this is a hard classification problem since stock market is often unpredictable. Despite our LDA prediction performed a better job compared to logistic regression we employed for the same problem before. This again demonstrates that every small tune in the model could make a big difference in the prediction accuracy.
 
+# Quadratic discriminant analysis (QDA)
+
+The syntax of fitting qda is the same as lda. qda() function is also found in the MASS library:
+
+```{r}
+qda.fit <- qda(Direction ~ Lag1 + Lag2 , data =  Smarket, subset = Year < 2005)
+qda.fit
+```
+
+Note that in the case of QDA we have a similar type of output, except the LDs we had inthe LDA.
+
+Making predictions:
+
+```{r}
+qda.predict <- data.frame(predict(qda.fit,newdata = Smarket.2005))
+head(qda.predict)
+```
+
+Prediction output is quite similar, too.
+
+Confusion matrix:
+
+```{r}
+table(qda.predict$class, Smarket.2005$Direction)
+```
+
+Average classification accuracy:
+
+```{r}
+mean(qda.predict$class == Smarket.2005$Direction)
+```
+
+Fascinating! We have found that the QDA improved the test accuracy to almost 60%. This implies that the true (Bayes) decision baundary is more closely modeled by the quadratic function rather than the linear alternatives LDA and logit. 
+
+# K-nearest neighbors (KNN)
+
+KNN is a non-parametric approach, which surprisingly works well in many classification scenarios. It is a must-have in our prediction toolbox!
+
+KNN could be espacially useful when the assumptions of LDA or QDA are not met, and when there are relatively few predictors (p < 4). Since KNN is non-parametric, it doesn't assume any particular distribution or shape of the boundary that was assumed by Logistic regression, LDA or QDA.
+
+The basic working principle of KNN is: 
+
+for a given X = x to be predicted, 
+
+- find the K number of nearest neighbors in the training data set, 
+- look at their majority classification,
+- and assign the class label to that category for this prediction.
+
+Given KNN is a completely non-parametric approach, it doesn't make any assumptions about the shape of the decision boundary. 
+
+- When K=1, the decision baoudary is the most flexible
+- As K increases, decision boundary becomes less flexible, eventually approaching to linear.
+
+While KNN could be superior in the cases when LDA and QDA assumptions fail, the choice of K has a critical impact on the test accuracy. Often resampling methods such are CV or Bootstrap are used to determine the optimal K, therefore the optimal flexibility of the decision boundary.
+
+Another important fact, given KNN is a non-parametric approach, we can not obtain a "variable importance" table to asses which variables are the most important for a given classification problem. 
+
+**As a rule of thumb we can summarize the choice of these approaches:**
+
+1. When the true decision boundaries are close to linear, then LDA and logistic regression perform well.
+
+2. In the case of moderately non-linear decision boundaries, QDA performs better than LDA and logistic regression.
+
+3. As the decision boundary gets more complicated, non-parametric approaches, such as KNN would be more useful. However, we will need to use resampling approaches, such as CV, to determine the optimal K, threfore the optimal smoothnes oof the decision boundary.
+
+4. **As a general rule, these approaches perform better when n is large, and p is small (p <4). Therefore, if we can reduce the dimensions of the data, this would make these models more useful and stable.**
+
+## class library and knn() function
+
+We need to use the class library to perform KNN classification:
+
+```{r}
+library(class)
+```
+
+The description of the knn() function:
+
+k-nearest neighbour classification for test set from training set. For each row of the test set, the k nearest (in Euclidean distance) training set vectors are found, and the classification is decided by majority vote, with ties broken at random. If there are ties for the kth nearest vector, all candidates are included in the vote.
+
+Usage (Note it  doesn't take a formula:
+
+**knn(train, test, cl, k = 1, l = 0, prob = FALSE, use.all = TRUE)**
+
+- train: matrix or data frame of training set cases.
+- test: matrix or data frame of test set cases. A vector will be interpreted as a row vector for a single case.
+- cl: factor of true classifications of training set
+- k: number of nearest neighbours classification considered.
+
+Once again we will use our stock market example to study KNN:
+
+```{r}
+attach(Smarket) # This makes the variables available in your environment
+```
+
+## Prepare training and test sets for simultaneous use in knn()
+
+Before we use the KNN, we need to prepare the test and training matrices as needed by the knn() function:
+
+```{r}
+Xlag <- cbind(Lag1,Lag2)
+```
+
+Define the training observations in the form of a boolean vector:
+
+```{r}
+train = Year < 2005
+```
+
+## Fit the knn model (K =1) and simultaneously make predictions
+
+```{r}
+knn.predict <- knn(train = Xlag[train,], test =  Xlag[!train,], 
+                   cl= Direction[train], k=1) 
+```
+
+**Note that this time we directly obtain the predition vector from the knn() function, since it takes both test and training sets as an argument and returns the prediction labels.**
+
+## Confusion matrix and accuracy
+
+We can determine the prediction accuracy:
+
+```{r}
+table(knn.predict, Direction[!train])
+mean(knn.predict == Direction[!train])
+```
+
+Note that in this particular problem, KNN with K =1 doesn't perform as good as logit, LDA or QDA. The test accuracy is equal to the level of random guessing (50%).
+
+## Revise the model K = 3
+
+What happens if we made the KNN decision boundary less flexible by seting K = 3 ?
+
+```{r}
+knn.predict.k3 <- knn(train = Xlag[train,], test =  Xlag[!train,], 
+                   cl= Direction[train], k= 3) 
+table(knn.predict.k3, Direction[!train])
+mean(knn.predict.k3 == Direction[!train])
+```
+
+Great! We notice that the overall test accuracy is increased as we made the model more flexible!
+
+## Choosing the optimal K for test accuracy
+
+Let's consider visualizing the test accuracy as we change the K in the knn fit:
+
+
+```{r}
+set.seed(12345)
+knn.predict.accuracy <- NULL
+for(i in 1:100){
+knn.predict.test <- knn(train = Xlag[train,], test =  Xlag[!train,], 
+                   cl= Direction[train], k= i) 
+knn.predict.accuracy[i] = mean(knn.predict.test == Direction[!train]) 
+}
+max.accuracy <- max(knn.predict.accuracy)
+plot(1:100, knn.predict.accuracy, pch = 20, col = "navy",xlab = "K", type = "l", main = "KNN Test Set Accuracy")
+text(x = which(knn.predict.accuracy == max.accuracy) + 1,
+     y = max.accuracy, paste0("K = ", which(knn.predict.accuracy == max.accuracy), "\n Accuracy: ", round(max.accuracy,4) ))
+points(1:100, knn.predict.accuracy, pch = 20, col = "navy")
+```
+
+Therfore, we have two main conclusions here:
+
+1. Finding the right K optimizes the smoothness of the decision boundary and therfore can have impact on the prediction accuracy.
+
+2. Since the choice of the first point (as well as behaviour in ties) is random, the predictions of KNN is dependent on the random number generation seed. For reproducible results, we need to set the random number seed.
