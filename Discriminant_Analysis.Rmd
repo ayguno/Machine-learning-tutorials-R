@@ -304,7 +304,7 @@ Great! We notice that the overall test accuracy is increased as we made the mode
 Let's consider visualizing the test accuracy as we change the K in the knn fit:
 
 
-```{r}
+```{r, fig.height= 6, fig.width=10}
 set.seed(12345)
 knn.predict.accuracy <- NULL
 for(i in 1:100){
@@ -319,8 +319,10 @@ text(x = which(knn.predict.accuracy == max.accuracy) + 1,
 points(1:100, knn.predict.accuracy, pch = 20, col = "navy")
 ```
 
-Therfore, we have two main conclusions here:
+Therefore, we have 3 main conclusions here:
 
-1. Finding the right K optimizes the smoothness of the decision boundary and therfore can have impact on the prediction accuracy.
+1. Finding the right K optimizes the smoothness of the decision boundary and therfore can have an impact on the prediction accuracy. This is typically performed by a resampling approach, such as cross validation or bootstrap.
 
-2. Since the choice of the first point (as well as behaviour in ties) is random, the predictions of KNN is dependent on the random number generation seed. For reproducible results, we need to set the random number seed.
+2. Note that in this problem, knn can not perform as good as LDA or QDA, regardless of the choice of the K. Thus, the true decision boundary is not linear, but more likely to be moderately quadratic, and less likely to be more complex than a quadratic boundary. As such, QDA outperformed all other approaches we tried so far.
+
+3. Since the choice of the first point (as well as behaviour in ties) is random, the predictions of KNN is dependent on the random number generation seed. For reproducible results, we need to set the random number seed.
