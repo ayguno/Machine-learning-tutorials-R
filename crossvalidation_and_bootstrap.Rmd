@@ -219,7 +219,66 @@ Eariler we used logistic regression to predict the probability of default using 
 data("Default")
 head(Default)
 set.seed(1)
-with(Default, plot(income,balance, pch = 20, col = ifelse(default == "Yes", "navy","red")))
+library(scales)
+with(Default, plot(income,balance, pch = 20, col = scales::alpha( ifelse(default == "Yes", "navy","pink"),0.7)))
 ```
 
 Fit a logistic regression model that uses income and balance to predict default.
+
+```{r}
+glm.default <- glm( default ~ income + balance, data = Default, family = "binomial")
+```
+
+Using the validation set approach, estimate the test error of this model. In order to do this, you must perform the following steps:
+
+i.Split the sample set into a training set and a validation set:
+
+```{r}
+library(caret)
+Intrain <- createDataPartition(Default$default, p = 0.7, list = FALSE)
+train.set <- Default[Intrain,]
+test.set <- Default[-Intrain,]
+```
+
+ii. Fit a multiple logistic regression model using only the training observations.
+
+```{r}
+glm.train <- glm(default ~ income + balance, data = train.set, family = "binomial")
+```
+
+iii. Obtain a prediction of default status for each individual in the validation set by computing the posterior probability of default for that individual, and classifying the individual to the default category if the posterior probability is greater than 0.5.
+
+```{r}
+# Vector of the fitted probabilities
+prob.fitted <- predict(glm.train,test.set)
+# Classifications
+predictions1 <- ifelse(prob.fitted > 0.5,"Yes", "No")
+table(predictions1,test.set$default)
+```
+
+Compute the validation set error, which is the fraction of the observations in the validation set that are misclassified.
+
+```{r}
+mean(predictions1 != test.set$default)
+```
+
+Our error rate is about 2.6 %.
+
+Repeat the process in (b) three times, using three different splits of the observations into a training set and a validation set. Comment on the results obtained.
+
+```{r}
+errors <-mean(predictions1 != test.set$default)
+for (i in 2:4){
+Intrain <- createDataPartition(Default$default, p = 0.7, list = FALSE)
+train.set <- Default[Intrain,]
+test.set <- Default[-Intrain,] 
+glm.train <- glm(default ~ income + balance, data = train.set, family = "binomial")   
+# Vector of the fitted probabilities
+prob.fitted <- predict(glm.train,test.set)
+# Classifications
+temp <- ifelse(prob.fitted > 0.5,"Yes", "No")
+errors[i] <- mean(temp != test.set$default)
+
+}
+
+```
