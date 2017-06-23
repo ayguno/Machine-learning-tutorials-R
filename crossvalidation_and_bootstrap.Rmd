@@ -109,8 +109,106 @@ for(d in degree){
 plot(degree, cv.error10, type = "b", col= "red" )
 ```
 
-In this example, LOOCV and 10-fold CV gave us pretty much the same answer. Howeer, in most cases we favor a 10-fold CV because it provides us a more stable estimate of error and it is also much cheaper to compute.
+In this example, LOOCV and 10-fold CV gave us pretty much the same answer. However, in most cases we favor a 10-fold CV because it provides us a more stable estimate of error and it is also much cheaper to compute.
 
 # Bootstrap
+
+Bootstrap is extremely useful for getting estimates of standard errors associated with **nasty statistics**. In other words, bootstrap lets us to get a sampling distribution for the statistics for which it is otherwise very hard to get a theoretical distribution. Very easy way of statistics, when the theory is very hard.
+
+In this example, we have an **alpha** statistic which represents the minimum risk associated with two investments. 
+
+Picking a combination of two investments is represented by a quite non-linear formula.
+
+We have two investments:
+
+- X and Y
+
+The risk (volatility) associated with them represented by:
+
+- VAR(X) and VAR(Y)
+
+The optimal formula for getting minimum risk for these two investments is given by the formula:
+
+___
+
+alpha = [VAR(Y) - COV(X,Y)] / [VAR(X)+VAR(Y) - 2 * COV(X,Y)]
+
+___
+
+Great! This is the formula of a new statistic, which we can directly compute if we know the values of X and Y.
+
+**But, how can we know the variability of alpha? We don't know its theoretical distribution, and it looks very non-linear. How can we draw inferences about alpha if we have given a sample of alphas for comparison?**
+
+This is where bootstrap really becomes handy.
+
+Let's first define a function that can compute alpha in R:
+
+```{r}
+alpha <- function(x,y){
+        # y and y are two vectors of actual data
+ (var(y) - cov(x,y))/(var(x)+ var(y) - 2 * cov(x,y))  
+}
+```
+
+We will use the data set Portfolio to calculate alpha:
+
+```{r}
+alpha(Portfolio$X,Portfolio$Y)
+```
+
+Now the question is: **what is the standard error of alpha?**
+
+We have no a priori distribution to calculate the standard error, therefore we will use bootsrap to estimate this standard error associated this unusual statistic:
+
+To make our function usable for bootstrap, we slightly modify it:
+```{r}
+alpha.fn <- function(data, index){
+        # data: is a given data frame that contains the vectors
+        # index: row indexes of the data frame to be used. This will allow us to change the row indexes that will be used in the calculation of the statistic in repeated samples (see below) 
+        # with function tells that use a data frame (or portion of it like in this case), and calculate the value of the function, where arguments can be directly passed in their original names as in the data frame
+        with(data = data[index,],alpha(X,Y))
+}
+
+```
+
+Let's try it by using all rows in the data:
+
+```{r}
+alpha.fn(Portfolio,1:100)
+```
+
+Now we can try bootstrap: what we are doing is, we are getting the all rows indexes from the data frame, get a sample of exact size (100 in this case), but **with replacement**. We then compute alpha by using these new **bootstrap samples from the original data**:
+
+```{r}
+set.seed(1) # Need to set.seed for reproducibility
+alpha.fn(Portfolio,sample(1:100,100,replace = TRUE))
+```
+
+This is one **bootstrap estimate** of alpha. Note that it is not the same as the original sample estimate, but close. 
+
+Next, if we keep doing this bootstrap sampling and compute alpha many many times, we can get a frequency distribution (sampling distribution) of the alphas. 
+
+We will use the **boot** function to perform this:
+
+note that the first 3 arguments are critical:
+
+- data: data frame used
+- statistic: the formula for the statistic to be computed
+- R: number of bootstrap repeats performed
+
+```{r}
+boot.out <- boot(Portfolio,alpha.fn, R = 1000)
+boot.out
+```
+
+That's it! Note that we got the original estimate of our statistic, bias associated with the bootstrap, and our **bootstrap standard error** estimate as the outputs.
+
+boot function also returns nice plots of the bootstrap distribution:
+
+```{r, fig.width= 10, fig.height=6}
+plot(boot.out)
+```
+
+Nice! It prints us out the bootstrap distribution, the dashed line marks the position of our estimate. Q-Q plot also confirms that the distribution we obtained is **near-normal distribution**.
 
 
