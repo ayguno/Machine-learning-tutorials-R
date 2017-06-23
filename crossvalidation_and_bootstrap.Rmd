@@ -211,4 +211,15 @@ plot(boot.out)
 
 Nice! It prints us out the bootstrap distribution, the dashed line marks the position of our estimate. Q-Q plot also confirms that the distribution we obtained is **near-normal distribution**.
 
+# Example problem: prediction using Default data set
 
+Eariler we used logistic regression to predict the probability of default using income and balance on the Default data set. We will now estimate the test error of this logistic regression model using the validation set approach.
+
+```{r}
+data("Default")
+head(Default)
+set.seed(1)
+with(Default, plot(income,balance, pch = 20, col = ifelse(default == "Yes", "navy","red")))
+```
+
+Fit a logistic regression model that uses income and balance to predict default.
