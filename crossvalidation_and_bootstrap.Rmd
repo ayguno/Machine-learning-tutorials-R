@@ -213,6 +213,8 @@ Nice! It prints us out the bootstrap distribution, the dashed line marks the pos
 
 # Example problem: prediction using Default data set
 
+## Testing(validation set) approach
+
 Eariler we used logistic regression to predict the probability of default using income and balance on the Default data set. We will now estimate the test error of this logistic regression model using the validation set approach.
 
 ```{r}
@@ -280,5 +282,123 @@ temp <- ifelse(prob.fitted > 0.5,"Yes", "No")
 errors[i] <- mean(temp != test.set$default)
 
 }
+errors
+```
 
+In all 4 attempts, the error rate is similar, but not exactly the same. The small variability exists due to random sampling to form the validation set.
+
+___
+
+Now consider a logistic regression model that predicts the prob- ability of default using **income, balance, and a dummy variable for student**. Estimate the test error for this model using the validation set approach. Comment on whether or not including a dummy variable for student leads to a reduction in the test error rate.
+
+Develop some expectations:
+
+```{r, fig.height=6, fig.width=9}
+par(mfrow = c(1,2))
+with(Default[Default$student == "Yes",],plot(income,balance, pch = 20, col = scales::alpha( ifelse(default == "Yes", "navy","pink"),0.7), main = "Students"))
+with(Default[Default$student == "No",],plot(income,balance, pch = 20, col = scales::alpha( ifelse(default == "Yes", "navy","pink"),0.7), main = "Non-Students"))
+```
+
+We don't see an obvious difference between the two groups interms of our classification of interest. In general, balance seems to be the best predictor amongst all.
+
+Let's first add the dummy variable:
+
+```{r}
+Default$student.binary <- factor(ifelse(Default$student == "Yes", 1,0))
+```
+
+Then, re-fit the model using validation set approach:
+
+```{r}
+set.seed(1)
+errors.student <-NULL
+for (i in 1:4){
+Intrain <- createDataPartition(Default$default, p = 0.7, list = FALSE)
+train.set <- Default[Intrain,]
+test.set <- Default[-Intrain,] 
+glm.train <- glm(default ~ income + balance + student.binary, data = train.set, family = "binomial")   
+# Vector of the fitted probabilities
+prob.fitted <- predict(glm.train,test.set)
+# Classifications
+temp <- ifelse(prob.fitted > 0.5,"Yes", "No")
+errors.student[i] <- mean(temp != test.set$default)
+
+}
+errors
+errors.student
+```
+
+Note that our error rates inflated in general, while in certain attempts we got similar error values. This could be because we have added a predictor that is not useful for the classification. By doing this, we increased model complexity but the amount of the data that is used to estimate the increased number of coefficients remained the same. While the bias is reduced, the variability increased, since we have more parameters to estimate with the same amount of data. This makes model less stable, causes overfitting, and we diverge from the Bayesian error rate.
+
+## The impact of the size of the training set
+
+What happens if we have different size of trainins sets? Let's test this impact, using 50, 70 and 80 percent of the data for training, and remaining portions for testing:
+
+
+```{r}
+training.portions <- c(0.5,0.7,0.8)
+final.results <- NULL
+for(j in seq_along(training.portions)){
+set.seed(1)
+results <- data.frame(training.portions = 1:100, error = 1:100,
+                      student.included = 1:100)
+        for (i in 1:100){
+        
+        Intrain <- createDataPartition(Default$default, p = 0.7, list = FALSE)
+        train.set <- Default[Intrain,]
+        test.set <- Default[-Intrain,] 
+        glm.train <- glm(default ~ income + balance, data = train.set, family = "binomial")   
+        # Vector of the fitted probabilities
+        prob.fitted <- predict(glm.train,test.set)
+        # Classifications
+        temp <- ifelse(prob.fitted > 0.5,"Yes", "No")
+        results$error[i] <- mean(temp != test.set$default)
+        results$training.portions[i] = training.portions[j]
+        results$student.included[i] = "No"
+ }
+ final.results <- rbind(final.results,results)
+}
+
+# Model including the student dummy variable
+
+for(j in seq_along(training.portions)){
+set.seed(1)
+results <- data.frame(training.portions = 1:100, error = 1:100,
+                      student.included = 1:100)
+        for (i in 1:100){
+        
+        Intrain <- createDataPartition(Default$default, p = 0.7, list = FALSE)
+        train.set <- Default[Intrain,]
+        test.set <- Default[-Intrain,] 
+        glm.train <- glm(default ~ income + balance + student.binary, data = train.set, family = "binomial")   
+        # Vector of the fitted probabilities
+        prob.fitted <- predict(glm.train,test.set)
+        # Classifications
+        temp <- ifelse(prob.fitted > 0.5,"Yes", "No")
+        results$error[i] <- mean(temp != test.set$default)
+        results$training.portions[i] = training.portions[j]
+        results$student.included[i] = "Yes"
+ }
+ final.results <- rbind(final.results,results)
+}
+
+library(ggplot2)
+ggplot(aes(x = factor(training.portions), y = error), data = final.results) +geom_boxplot()+ geom_jitter()+ facet_grid( . ~ student.included) +theme_bw() 
+```
+
+```{r}
+library(dplyr)
+final.results %>% group_by(student.included,training.portions) %>% summarise(mean.error = mean(error), sd.error = sd(error))
+```
+
+We notice that in this example if we perform the sampling many many times, the mean error converges to the same value in both models.
+
+```{r}
+ggplot(aes(x =  error, group = student.included , color = student.included), data = final.results) +geom_density() +theme_bw() +scale_colour_discrete() +facet_grid
+```
+
+The distribution of the errors for different sampling proportions are very similar, however they are slightly differet between the two models as we expected.
+
+
+```
 ```
