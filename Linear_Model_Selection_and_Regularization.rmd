@@ -59,3 +59,20 @@ ii) Adjust the R-squared for each model (doesn't work for glms): unlike R-square
 
 ## Regularization (Shrinkage Methods, Ridge and Lasso regression)
 
+In this orthagonal approach, we try to simplify the model by penalizing the coefficients as they increase. Therefore, the coefficients are shrunken towards zero.
+
+This shrinkage is known as **regularization**. The main advantage of regularization is that it reduces the variance and tries to make the model more stable. In the case of lasso, it can also perform model selection.
+
+In both Ridge and Lasso regression, the tuning parameter, **lambda** optimizes the model.
+
+The calculations that are optimized for either of these models 
+___
+
+For Ridge:
+
+**RSS + lambda * sum([Bj]^2)**
+
+For Lasso:
+
+**RSS + lambda * sum(abs(Bj))**
+___
