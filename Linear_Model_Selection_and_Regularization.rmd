@@ -1,0 +1,61 @@
+---
+title: "Linear model selection and Regularization"
+author: "Ozan Aygun"
+date: "6/25/2017"
+output: 
+   html_document:
+        toc: true
+        number_sections: true
+        depth: 4
+        theme: cerulean
+        highlight: tango
+        df_print: paged
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,results = "markup", fig.align = "center", fig.width = 5, fig.height = 4,message=FALSE,warning=FALSE)
+```
+
+
+# Introduction
+
+In this tutorial our goal is to understand what we can do to go beyond the ordinary least squares estimation of coefficients, while still staying in the linear regression framework.
+
+# Why do we want to go beyond ordinary least squares (OLS) regression ?
+
+- Let's say we have a LONG data set: 1 millon observations and 3-4 predictors (i.e: n >> p) in this case it is very tempting to use OLS regression, as well as more flexible approaches such as quadratic regression, Tree-based models or Support Vector Machines.
+
+- But what happens when we have a WIDE data set? For instance 500 observations and 300 predictors, or 10,000 predictors, such as in genomics and proteomics data? (i.e: p >> n ). In such cases, OLS regression will severely suffer from overfitting if we include all these features together. The coefficients will be unstable, their standard errors will be large since we are trying to estimate so many parameters with very few data. 
+
+Therefore, when p > n, or even when p ~ n, we need altertative approaches to:
+
+1. **Increase prediction accuracy**: by reducing the variance of the coefficients and making the model more stable (i.e: reduce overfitting)
+
+2. **Making the model more interpretable**: this relates to FEATURE SELECTION paradigm. Using certain rationalle, we come up with a smaller set of predictors (for instance by shrinking their coefficients to zero). As the model gets less complex, it becomes easier to interpret.
+
+# Three classes of methods 
+
+There are at least 3 orthagonal classes of methods we can apply to achieve these improvements beyond the OLS:
+
+##Subset selection methods
+
+This involves identifiying a small subset of predictors that we think closest related to the response. We then use this reduced set of variables to fit the model. Examples of this approach are:
+
+- Best subset selection
+- Forward selection
+- Reverse selection
+
+After we perform these strategies, we still need to estimate the test error of various different models being generated during the process. This forms the basis of selecting the **best model**. In general, once any of these selection processes are applied, we pick the best model by using either of these two approaches:
+
+- Adjustment-based methods:
+
+i) adjust the training error to provide an estimate of the test error: these involves calculating and comparing metrics like Cp/AIC or BIC. Pick the model that has the smallest Cp/AIC or BIC.
+
+ii) Adjust the R-squared for each model (doesn't work for glms): unlike R-squared (which always increase as the model gets more complex, therefore misleading), adjusted R-squared **pays the price** for adding unnecessary variables in the model, therefore it is a more legitimate measure of optimal model selection.
+
+
+- Cross-validation: more prefered approach. Perform cross-validation for each step of model selection and record the cross-validation error. FInally pick the model that gives the least cross-validation error.
+
+## Regularization (Shrinkage Methods, Ridge and Lasso regression)
+
