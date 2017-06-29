@@ -14,7 +14,7 @@ output:
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,results = "markup", fig.align = "center", fig.width = 5, fig.height = 4,message=FALSE,warning=FALSE)
+knitr::opts_chunk$set(echo = TRUE,results = "markup", fig.align = "center", fig.width = 6, fig.height = 6,message=FALSE,warning=FALSE)
 ```
 
 
@@ -150,8 +150,59 @@ Notice that what we are doing here is actually computatonally intense.
 - We fit a model using the Sum of Squares convex optimization and obtain cross-validated error (average of 10 model fits)
 3. We continue steps 1 and 2 for all fine grids of lambda values in the range.
 
-Finally we can come up with a series of CV errors (MSE in this case since the outsome is continuous)
+Finally we can come up with a series of CV errors (MSE in this case since the outsome is continuous) for all fine grid of values of lambda.
 
 The object returned by cv.ridge has a builtin plot where we can observe the Mean Square Error as a function of different values of log(lambda). 
 
-In this example, we notice that MSE is high when lambda is very high, when the model is restricted, and MSE gets lower as  
+In this example, we notice that cv.MSE is high when lambda is very high, when the model is restricted. When we relax lambda, cv.MSE gets lower and reaches to a minimum. 
+
+The two vertical lines are produced in the plot, the left one marks the model with min MSE and the middle one shows a little more restricted model 1 standard error away from the minimum MSE. 
+
+The numbers at the top of the plot indicate how many predictors remain in the model during the regularization. Note that since we are doing Ridge regression all predictors remained in the model (19 variables + intercept).
+
+In this example, all models between the log(lambda) ~ 3  and log(lambda) ~ 6 appear to have the minimum MSE. When choosing the optimal model, we might prefer to get the more restricted model that is indicated by the second vertical line, where log(lambda) is closer to 8.
+
+# Lasso regression
+
+Recall that the lasso is very similar to ridge, except we are penalizing the abolute values of coefficients.
+
+Note that in this case we need to define alpha =1, which can be omitted since this is the default of the glmnet function:
+
+```{r, fig.height = 6}
+# Fit the lasso regression model
+
+fit.lasso <- glmnet(x,y)
+plot(fit.lasso, xvar = "lambda", label = TRUE)
+```
+
+Note that we have zero variables in the case of lasso, because it is doing both chrinkage and variable selection.
+
+---
+
+Another intresting plot that can be produced, which plots the **% deviance explained (~ similar to: R-squared)** by the model:
+
+```{r, fig.height= 6}
+plot(fit.lasso, xvar = "dev", label = TRUE)
+```
+
+**This is a very useful plot**, especially in this example it reveals something quite interesting. 
+
+Notice that the regularized model with shrunken coefficients can already explain 40% of the deviance when we have 5 predictors left and they are very close to zero. Strikingly, at the point when we have 12 predictors included in the model, we only added up another 10% deviance explained, but coefficients have grown substantially. This is the point where model got unstable and most likely started overfitting.
+
+Take home lesson for us is to look carefully to this type of plot and try to locate the sweetspot where coefficients are shrunken, model is simplified, yet we are still able to explain a good fraction of the devience. That is likely to be the most stable model that win the bias-variance trade off.
+
+
+---
+
+Next, we can use cross-validation to pick the optimal model based on the CV.MSE:
+
+```{r}
+cv.lasso <- cv.glmnet(x,y)
+plot(cv.lasso)
+```
+
+Great! Note what we find:
+
+- The minimum cv.error is obtained when there are 15 predictors.
+
+- 1 standard error away from this min cv.MSE corresponds to the point where we have 5 predictors, consistent with what we has seen above.
