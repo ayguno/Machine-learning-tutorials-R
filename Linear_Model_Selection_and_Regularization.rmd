@@ -61,18 +61,97 @@ ii) Adjust the R-squared for each model (doesn't work for glms): unlike R-square
 
 In this orthagonal approach, we try to simplify the model by penalizing the coefficients as they increase. Therefore, the coefficients are shrunken towards zero.
 
-This shrinkage is known as **regularization**. The main advantage of regularization is that it reduces the variance and tries to make the model more stable. In the case of lasso, it can also perform model selection.
+This shrinkage is known as **regularization**. 
+
+The main advantage of regularization is that it **reduces the variance of coefficients and tries to make the model more stable**. In the case of lasso, it can also perform model selection.
 
 In both Ridge and Lasso regression, the tuning parameter, **lambda** optimizes the model.
 
-The calculations that are optimized for either of these models 
+The calculations that are optimized for either of these models are very similar:
+
 ___
 
-For Ridge:
 
-**RSS + lambda * sum([Bj]^2)**
+For Ridge (also called L2 regularization):
 
-For Lasso:
+**RSS + lambda * sum([ Bj ]^2)**
 
-**RSS + lambda * sum(abs(Bj))**
+For Lasso (also called L1 regularization):
+
+**RSS + lambda * sum( abs( Bj ))**
+
+L1: abs( Bj ) (sum of the absolute values of B's)
+
 ___
+
+
+These calculations are also refered to as **convex optimizations.** Note that the choice of lambda plays a critical role on how the coefficients for each predictor (Bj) will be determined.
+
+When lambda = 0, the convex optimization is simply RSS, in other words, the parameters will be obtained by using the ordinary least squares.
+
+As lambda increases, it would be harder to minimize the comvex optimization, therefore the coefficients for each predictor (Bj) will be penalized and start to shriking towards the zero.
+
+Due to the nature of the computations, in Ridge regression coefficients usually never exactly becomes zero even though they reach very close to zero. In Lasso regression however, certain coefficients will shrink exactly to zero as lambda increases. Therefore, Lasso also performs feature selection. For this reason, Lasso is generally useful over Ridge, when the desired model is more sparse (i.e: requires less number of features/complexity).
+
+# Ridge and Lasso regression example
+
+We will use **glmnet** package to implement Ridge and Lasso regularization. glmnet doesn't use the formula interface, we need to define predictors and outcome in a different way. This involves using the **model.matrix()** function.
+
+model.matrix() creates a design (or model) matrix, e.g., by expanding factors to a set of dummary variables (depending on the contrasts) and expanding interactions similarly.
+
+We will use the Hitters data set from the ISLR package, where we would like to fit a model to predict the salary of baseball players using their various game statistics as predictors. 
+
+```{r}
+library(glmnet)
+library(ISLR)
+data("Hitters")
+
+# We will remove missing values for this example
+Hitters <- na.omit(Hitters)
+
+# We create a matrix of predictors
+x = model.matrix(Salary ~ . -1, data = Hitters) 
+# Note we use all predictors Salary ~ .
+# Note we add -1 since we don't want an intercept to appear
+# Note model.matrix drops the outcome vector, and it converts the factor variables into dummy variables 
+
+
+# We create a response vector
+y = Hitters$Salary
+```
+
+# Ridge regression
+
+Ridge regression is fitted by calling glmnet with alpha = 0 argument. alpha is the elasticnet mixing parameter, with 0≤α≤ 1.
+
+alpha=1 is the lasso penalty, and alpha=0 the ridge penalty. 
+
+For alpha between 0 and 1 you will get elasticnet models.
+
+```{r,fig.height= 6}
+fit.ridge <- glmnet(x, y, alpha = 0)
+plot(fit.ridge,xvar = "lambda", label = TRUE)
+```
+
+We can see how coefficients are penalized as lambda increases.
+
+Now, we need to pick an optimal value of lambda to pick the best model coefficients. Note that there is also **cv.glmnet** function which can perform k-fold cross-validation.
+
+```{r, fig.height= 6}
+# Note that default is 10-fold cross-validation
+cv.ridge <- cv.glmnet(x,y,alpha = 0)
+plot(cv.ridge)
+```
+
+Notice that what we are doing here is actually computatonally intense. 
+
+1. We get very fine grids of labda values (we can customize the range of values, otherwise function will define one for us)
+2. Using each lambda value, we perform 10-fold cross validation:
+- We fit a model using the Sum of Squares convex optimization and obtain cross-validated error (average of 10 model fits)
+3. We continue steps 1 and 2 for all fine grids of lambda values in the range.
+
+Finally we can come up with a series of CV errors (MSE in this case since the outsome is continuous)
+
+The object returned by cv.ridge has a builtin plot where we can observe the Mean Square Error as a function of different values of log(lambda). 
+
+In this example, we notice that MSE is high when lambda is very high, when the model is restricted, and MSE gets lower as  
