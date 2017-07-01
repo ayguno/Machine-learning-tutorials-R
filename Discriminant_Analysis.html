@@ -535,10 +535,10 @@ qda.fit</code></pre></div>
 <span class="kw">table</span>(knn.predict.k3, Direction[<span class="op">!</span>train])</code></pre></div>
 <pre><code>##               
 ## knn.predict.k3 Down Up
-##           Down   48 55
-##           Up     63 86</code></pre>
+##           Down   48 56
+##           Up     63 85</code></pre>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">mean</span>(knn.predict.k3 <span class="op">==</span><span class="st"> </span>Direction[<span class="op">!</span>train])</code></pre></div>
-<pre><code>## [1] 0.531746</code></pre>
+<pre><code>## [1] 0.5277778</code></pre>
 <p>Great! We notice that the overall test accuracy is increased as we made the model more flexible!</p>
 </div>
 <div id="choosing-the-optimal-k-for-test-accuracy" class="section level2">
