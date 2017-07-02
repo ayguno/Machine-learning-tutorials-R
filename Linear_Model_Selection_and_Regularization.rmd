@@ -341,3 +341,43 @@ Here the choice of the model depends on the application.
 
 - If we seek parsimony, i.e: a more interpretable model, we may want to go with the lasso, since the coefficients are produced for the original set of predictors, therefore making the resulting model more interpretable.
 
+# Partial Least Squares (PLS) Regression
+
+PCR is mainly converned explaining the variance within the predictors, and assumes that this is sufficent to explain the variance in the response, since often response will vary in the ame direction as the predictors.
+
+While this is often the case, there are situations where the variation in the response can not be faithfully captured just by explaining the variability in the predictors.
+
+Partial Least Squares provides an alternative to PCR, by taking the direction of response into account when fitting the model.
+
+PLS is implemented using the **plsr** function within the pls library:
+
+```{r}
+set.seed(1)
+pls.fit <- plsr(Salary ~ . , data = Hitters, scale = TRUE, validation = "CV" )
+summary(pls.fit)
+validationplot(pls.fit, val.type = "MSEP")
+```
+
+From the second part of the summary table, we can now notice that PLS, (in contrast to PCR), also tries to explain the variance in the response, Salary.
+
+
+We again note that going beyond the 5th component have marginal impact. Therefore, let's make predictions using the model with 5 PCs:
+
+```{r}
+pls.pred <- predict(pls.fit, newdata = Hitters, ncomp = 5)
+
+# Calculate MSE:
+mean((y - pls.pred)^2)
+
+# compare MSEs for all models we used:
+
+MSE.table <- data.frame(lasso = (rmse.cv ^2),
+                        pcr = mean((y- pcr.pred)^2),
+                        pls = mean((y- pls.pred)^2))
+
+MSE.table
+```
+
+Note that in this case PLS provided the lowest MSE using the training data set.
+
+A better comparison would be using an independent test or validation set, if available. 
