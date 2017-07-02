@@ -254,3 +254,14 @@ best.lambda
 # Note the s = argument refers to lambda
 coef(fit.lasso, s = best.lambda)
 ```
+
+Using the model from cross-validation lasso:
+
+Note that in this case we choose a lambda to get a single set of predictions. The default is to get the 1 standard error lambda, which is the lambda that gives the MSE that is 1 standard error higher than minimum cross-validated mse. This way we choose a more restricted model:
+
+```{r}
+cv.pred<- predict.cv.glmnet(cv.lasso,newx = x, s = "lambda.1se")
+rmse.cv = sqrt(mean((y-cv.pred) ^2))
+rmse.cv
+```
+
