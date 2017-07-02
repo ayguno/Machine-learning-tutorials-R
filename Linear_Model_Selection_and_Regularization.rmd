@@ -175,7 +175,7 @@ fit.lasso <- glmnet(x,y)
 plot(fit.lasso, xvar = "lambda", label = TRUE)
 ```
 
-Note that we have zero variables in the case of lasso, because it is doing both chrinkage and variable selection.
+Note that we have zero variables in the case of lasso, because it is doing both shrinkage and variable selection.
 
 ---
 
@@ -205,4 +205,52 @@ Great! Note what we find:
 
 - The minimum cv.error is obtained when there are 15 predictors.
 
-- 1 standard error away from this min cv.MSE corresponds to the point where we have 5 predictors, consistent with what we has seen above.
+- 1 standard error away from this min cv.MSE corresponds to the point where we have 5 predictors, consistent with what we have seen above.
+
+
+**Obtaining the coefficients**
+
+We will use **coef** function to extract coefficients form the model objects.
+
+Note that fit.lasso will have the entire path of coefficients, while cv.lasso will provide the optimal number of coefficients obtained after the cross-validation.
+
+```{r}
+coef(cv.lasso)
+```
+
+Note that cv.lasso picked the best model and provided all non-zero coefficients for the selected predictors to be included in the model as well as one model intercept.
+
+## Making predictions
+
+We can use **predict** function to make predictions using the glmnet model object.
+
+Suppose we wante to get the MSE of the training error from our lasso model:
+
+```{r}
+fit.lasso
+pred <- predict(fit.lasso,x)
+dim(pred)
+length(y)
+```
+
+Note that prediction is a matrix, each column represents a model prediction vector, obtained from a distinct selection of lambda, for each of the observations.
+
+Obtain RMSE from each model prediction:
+
+```{r}
+rmse <- sqrt(apply((y-pred)^2,2,mean))
+plot(log(fit.lasso$lambda),rmse, type = "b", col = "navy")
+
+# The smallest test rmse we obtained:
+
+order(rmse)[1]
+
+# Learn the best lambda: the lambda that yields the model that gives the minimum rmse:
+
+best.lambda <- fit.lasso$lambda[order(rmse)][1]
+best.lambda
+
+# Get the model coefficients that are found by the best lambda:
+# Note the s = argument refers to lambda
+coef(fit.lasso, s = best.lambda)
+```
