@@ -150,7 +150,7 @@ Notice that what we are doing here is actually computatonally intense.
 - We fit a model using the Sum of Squares convex optimization and obtain cross-validated error (average of 10 model fits)
 3. We continue steps 1 and 2 for all fine grids of lambda values in the range.
 
-Finally we can come up with a series of CV errors (MSE in this case since the outsome is continuous) for all fine grid of values of lambda.
+Finally we can come up with a series of CV errors (MSE in this case since the outcome is continuous) for all fine grid of values of lambda.
 
 The object returned by cv.ridge has a builtin plot where we can observe the Mean Square Error as a function of different values of log(lambda). 
 
