@@ -265,3 +265,79 @@ rmse.cv = sqrt(mean((y-cv.pred) ^2))
 rmse.cv
 ```
 
+# Principal components regression (PCR)
+
+We will use the **pcr** function in the **pls** library to perform PCR. Once again we are focusing on the Hitters data set and try to estimate the Salary by using other predictors in the data set. Note that we are still workign with the complete cases of the data set where the missing values are omitted.
+
+pcr function also uses the formula interface so it si relatively straightforward to use:
+
+```{r}
+library(pls)
+set.seed(2)
+pcr.fit <- pcr(Salary ~ . , data = Hitters, scale = TRUE, validation = "CV")
+```
+
+Note that here we set:
+
+- scale = TRUE: to standardize each variable (i.e: divide each predictor with its standard error). This is performed before calculating the Principal Components to ensure that the specific scale in which the predictors are measured will not have ane effect.
+
+- validation = "CV" : we ask the pcr function to compute a 10-fold cross-validation error for each possible value of the principal components (M) that can be derived from the data matrix.
+
+summary function is used to visualize the resulting model.fit object:
+
+```{r}
+summary(pcr.fit)
+```
+
+This output pretty much explains what is going on when we perform the PCR:
+
+**In the first section of the summary table we get the CV-estimated error:**
+
+- RMSEP: Note that pcr returns the root mean squared error (to get MSE, just square the RMSE values). For each number of components used in the model, the predicted RMSE from 10-fold CV is provided. 0-component model corresponds to the NULL model which just contains an intercept.
+
+We can use the **validationplot()** function to plot the cross-valitation estimated RMSE or MSE scores:
+
+```{r}
+validationplot(pcr.fit,val.type = "RMSEP")
+validationplot(pcr.fit,val.type = "MSEP")
+```
+
+We note that min CV-error is obtained when we have M = 16 principal components used in the regression. Since this is barely higher than M =19 (number of entire set of predictors), using these many PCs in the model is not likely to provide any benefit.
+
+Neverthless, we also note that when we use a single component (the first component), the CV-error is only slightly larget than this minimum, suggesting that using smaller number of components (1-2) might be sufficient to get the same performance. The test error could be even better in the case of less number of components since we might be overfitting as we approach to OLS.
+
+**The second part of the summary table focuses on the variance-explained by using each model containing the indicated number of principal components:**
+
+We can think this as the amount of information about the predictors or response that is captured by using M principal components. 
+
+As an example, using only 1 Principal component captures about 38% of the variance, while adding another component will capture 60% of the total variance. Note that in this case adding 13 principal components are able to explain 99% of the total variance. Using all (M = p = 19) principal components will result in 100% variance explained.
+
+This can be indirectly visualized by the **validationplot()** function by following the R-squared:
+
+```{r}
+validationplot(pcr.fit, val.type = "R2")
+```
+
+Again we note that addition of principal components beyond the 3-4 PCs do not substantially increase the overall model R-squared.
+
+Let's say we would like to compute the MSE for the training data set we have, using the M = 5 principal components:
+
+```{r}
+pcr.pred <- predict(pcr.fit,newdata = Hitters,ncomp = 5)
+# Note that we get a single vector of predictions since we only used a single model using 5 principal components
+
+# calculate MSE:
+mean( (y - pcr.pred)^ 2)
+
+# compare with the MSE we obtained with lasso:
+
+rmse.cv ^2
+```
+
+Note that the MSE we obtained with PCR is competitive (or event lower than) the MSE we obtained from the lasso regression. 
+
+Here the choice of the model depends on the application. 
+- If our ultimate goal is to make predictions with miminum possible MSE, we would use PCR. 
+
+- If we seek parsimony, i.e: a more interpretable model, we may want to go with the lasso, since the coefficients are produced for the original set of predictors, therefore making the resulting model more interpretable.
+
