@@ -220,6 +220,8 @@ coef(cv.lasso)
 
 Note that cv.lasso picked the best model and provided all non-zero coefficients for the selected predictors to be included in the model as well as one model intercept.
 
+___
+
 ## Making predictions
 
 We can use **predict** function to make predictions using the glmnet model object.
